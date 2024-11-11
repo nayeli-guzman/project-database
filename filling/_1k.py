@@ -107,10 +107,11 @@ def populateBooking(passengers, routes):
         hora = fake.time()
         fecha_realizada = datetime.combine(fecha_realizada, datetime.strptime(hora, "%H:%M:%S").time())
         
-        tiempo_atencion = random.randint(1, 60)
-        
+        tiempo_atencion = None if random.choice([True, False]) else fecha_realizada + timedelta(hours=random.randint(1, 48))
         estado = 'realizada'
-        #estado = random.choice(['realizada', 'aceptado', 'cancelado', 'rechazado'])
+        
+        if (tiempo_atencion is not None):
+            estado = random.choice(['aceptado', 'cancelado', 'rechazado'])
         
         cursor.execute("""
             INSERT INTO Solicitud (id_sv, Pid_u, id_r, Cid_u, fecha_realizada, tiempo_atencion, estado)
