@@ -179,15 +179,146 @@ def populateReview(travels):
                     (id_v, id_sv, puntuacion, comentario, tipo)
                 )
 
+def populatePayment(travels):
+    for i in range(len(travels)):
+        id_sv, id_v = travels[i]
+        
+        monto = round(random.uniform(0.0, 20.0), 2)        
+        metodo = random.choice(['yape', 'plin', 'efectivo'])
+        id_p = fake.uuid4()[:10]  # Genera un ID único truncado a 10 caracteres
+        
+        cursor.execute("""
+            INSERT INTO Pago (id_p, id_v, id_sv, monto, metodo)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (id_p, id_v, id_sv, monto, metodo))
 
+def populateVehicles(drivers):
+    for driver in (drivers):
+        id_u = driver
+        
+        placa = fake.license_plate()[:10]  
+        modelo = fake.word()[:10]  
+        capacidad = random.randint(1, 7) 
+        soat = str(random.randint(10000, 99999)) 
+        imagen_path = f"images/{fake.word()}.jpg" 
+        fecha_registro = fake.date_this_decade()  
+        estado = random.choice(['U', 'N'])  
+        
+        cursor.execute("""
+            INSERT INTO Vehiculos (placa, id_u, modelo, capacidad, SOAT, imagen_path, fecha_registro, estado)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (placa, id_u, modelo, capacidad, soat, imagen_path, fecha_registro, estado))
 
-usuarios = populateUser(10)
-[passengers, drivers] = populatePassengerDriver(usuarios)
+def populateCouponsPassenger(passengers) :
+    cp = []
+    for i in range (passengers):
+        idCp = fake.unique.bothify("CP########") 
+        descuento = random.randint(5, 50)
+        fecha_caducidad = fake.date_between(today=datetime.today(), end_date="+1m")
+    
+        cursor.execute("""
+            INSERT INTO CuponP (idCp, descuento, fechaCaducidad)
+            VALUES (%s, %s, %s)
+        """, (idCp, descuento, fecha_caducidad))
+        cp.append(idCp)
+    return cp
+
+def populateCouponsDriver(drivers) :
+    cd = []
+    for i in range (drivers):
+        idCp = fake.unique.bothify("CC########") 
+        descuento = random.randint(5, 50)
+        fecha_caducidad = fake.date_between(today=datetime.today(), end_date="+1m")
+        descripcion = fake.sentence(nb_words=6)[:50]  
+        
+        cursor.execute("""
+            INSERT INTO CuponC (idCp, descuento, fechaCaducidad, descripcion)
+            VALUES (%s, %s, %s, %s)
+        """, (idCp, descuento, fecha_caducidad, descripcion))
+        cd.append(idCp)
+    return cd
+
+def populatePenalizacion(users):
+    for _ in range(len(users)):
+        idPn = fake.unique.bothify("PE########")        
+        id_u = random.choice(users)
+        
+        motivo = fake.sentence(nb_words=6)[:50]
+        fecha_inicio = fake.date_between(start_date="-1y", end_date="today")  
+        fecha_fin = fecha_inicio + timedelta(days=random.randint(1, 30)) 
+        
+        cursor.execute("""
+            INSERT INTO penalizacion (idPn, id_u, motivo, fechaInicio, fechaFin)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (idPn, id_u, motivo, fecha_inicio, fecha_fin))
+
+def populateOtorgadoP(coupons, users):
+    for i in range(len(coupons)):
+        if (not random.choice([True, False])):
+            return;
+
+        id_u =  random.choice(users)
+        idCp = coupons[i]
+        
+        estado = random.choice(['usado', 'no usado'])
+        
+        fecha_uso = None
+        if estado == 'usado':
+            fecha_uso = fake.date_this_year(before_today=True, after_today=False) + ' ' + fake.time()  
+        
+        cursor.execute("""
+            INSERT INTO otorgadoP (id_u, idCp, estado, fecha_uso)
+            VALUES (%s, %s, %s, %s)
+        """, (id_u, idCp, estado, fecha_uso))
+    
+def populateOtorgadoD(coupons, users):
+    for i in range(len(coupons)):
+        if (not random.choice([True, False])):
+            return;
+
+        id_u =  random.choice(users)
+        idCp = coupons[i]
+        
+        estado = random.choice(['usado', 'no usado'])
+        
+        fecha_uso = None
+        if estado == 'usado':
+            fecha_uso = fake.date_this_year(before_today=True, after_today=False) + ' ' + fake.time()  
+        
+        cursor.execute("""
+            INSERT INTO otorgadoP (id_u, idCp, estado, fecha_uso)
+            VALUES (%s, %s, %s, %s)
+        """, (id_u, idCp, estado, fecha_uso))
+
+def populateQueja(passengers, drivers):
+    max = len(passengers) + len(drivers)
+    for _ in range(max):
+        id_uDte = random.choice(passengers)        
+        id_uDdo = random.choice(drivers)
+        
+        motivo = random.choice(['Mal comportamiento', 'Incumplimiento de normas', 'Falta de comunicación'])
+        
+        fecha = fake.date_this_year(before_today=True, after_today=False)
+        
+        cursor.execute("""
+            INSERT INTO queja (id_uDte, id_uDdo, motivo, fecha)
+            VALUES (%s, %s, %s, %s)
+        """, (id_uDte, id_uDdo, motivo, fecha))
+    
+    
+users = populateUser(10)
+[passengers, drivers] = populatePassengerDriver(users)
 routes = populateRoutes(drivers)
 travels = populateBooking(passengers, routes)
-print(travels)
-
 populateReview(travels)
+populatePayment(travels)
+populateVehicles(drivers)
+couponsP = populateCouponsPassenger(len(passengers))
+couponsD = populateCouponsDriver(len(drivers))
+populatePenalizacion(users)
+populateOtorgadoP(couponsP,passengers)
+populateOtorgadoD(couponsD,passengers)
+populateQueja(passengers,drivers)
 
 # Cerrar la conexión
 cursor.close()
