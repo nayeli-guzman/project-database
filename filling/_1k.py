@@ -22,7 +22,9 @@ cursor.execute('SET search_path TO _1k')
 
 # Funciones para poblar las tablas
 
-def populate_usuario(num_records):
+
+
+def populateUser(num_records):
     usuarios = []
     for _ in range(num_records):
         id_u = fake.unique.bothify(text='U????????')
@@ -93,9 +95,9 @@ def populateRoutes(drivers):
     return routes
 
 def populateBooking(passengers, routes):
-    
-    solicitudes = []
-    
+
+    travels = []
+        
     for i in range(len(passengers)):
         id_sv = fake.unique.bothify(text='S?????????')
         
@@ -112,19 +114,42 @@ def populateBooking(passengers, routes):
         
         if (tiempo_atencion is not None):
             estado = random.choice(['aceptado', 'cancelado', 'rechazado'])
-        
+
         cursor.execute("""
             INSERT INTO Solicitud (id_sv, Pid_u, id_r, Cid_u, fecha_realizada, tiempo_atencion, estado)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (id_sv, Pid_u, id_r, Cid_u, fecha_realizada, tiempo_atencion, estado))
-        solicitudes.append(id_sv)
 
-    return solicitudes
+        if(estado=='aceptado'):
+            travels.append(populateTravel(id_sv, tiempo_atencion))
 
-usuarios = populate_usuario(10)
+    return travels
+
+def populateTravel(id_sv, tiempo_atencion):
+
+    id_v = fake.unique.bothify(text='T#######')
+    distancia = round(random.uniform(5.0, 500.0), 2)  
+    fecha = tiempo_atencion + timedelta(hours=random.randint(1, 48))
+    
+    duracion = timedelta(minutes=random.randint(30, 300))
+    estado = random.choice(['realizada', 'cancelada', 'enproceso'])    
+    destino = fake.bothify("(#####.##)")
+    
+    # Insertar datos en la tabla Viaje
+    cursor.execute(
+        """
+        INSERT INTO Viaje (id_v, id_sv, distancia, fecha, duracion, estado, destino)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """,
+        (id_v, id_sv, distancia, fecha, duracion, estado, destino)
+    )
+    
+    return (id_v, id_sv)
+
+usuarios = populateUser(10)
 [passengers, drivers] = populatePassengerDriver(usuarios)
 routes = populateRoutes(drivers)
-bookings = populateBooking(passengers, routes)
+travels = populateBooking(passengers, routes)
 
 # Cerrar la conexión
 cursor.close()
