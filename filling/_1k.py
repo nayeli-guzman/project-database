@@ -94,7 +94,7 @@ def populateRoutes(drivers):
         routes.append((id_r, id_u))
     return routes
 
-def populateBooking(passengers, routes):
+def populateBooking(passengers, routes):    
 
     travels = []
         
@@ -135,7 +135,6 @@ def populateTravel(id_sv, tiempo_atencion):
     estado = random.choice(['realizada', 'cancelada', 'enproceso'])    
     destino = fake.bothify("(#####.##)")
     
-    # Insertar datos en la tabla Viaje
     cursor.execute(
         """
         INSERT INTO Viaje (id_v, id_sv, distancia, fecha, duracion, estado, destino)
@@ -146,10 +145,49 @@ def populateTravel(id_sv, tiempo_atencion):
     
     return (id_v, id_sv)
 
+def populateReview(travels):
+
+    for i in range(len(travels)):
+
+        conf = random.choice([0,1])
+
+        if (conf==1):
+            id_v, id_sv = travels[i]
+            
+            puntuacion = random.randint(0, 5)
+            comentario = fake.sentence(nb_words=15)[:100]
+            tipo = random.choice(['P', 'C'])
+            
+            cursor.execute(
+                """
+                INSERT INTO Calificacion(id_v, id_sv, puntuacion, comentario, tipo)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (id_v, id_sv, puntuacion, comentario, tipo)
+            )
+            conf = random.choice([0,1])
+            if (conf==1):
+                tipo= (tipo=='P')*'C' + (tipo=='C')*'P' 
+                puntuacion = random.randint(0, 5)
+                comentario = fake.sentence(nb_words=15)[:100]
+                
+                cursor.execute(
+                    """
+                    INSERT INTO Calificacion (id_v, id_sv, puntuacion, comentario, tipo)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    (id_v, id_sv, puntuacion, comentario, tipo)
+                )
+
+
+
 usuarios = populateUser(10)
 [passengers, drivers] = populatePassengerDriver(usuarios)
 routes = populateRoutes(drivers)
 travels = populateBooking(passengers, routes)
+print(travels)
+
+populateReview(travels)
 
 # Cerrar la conexión
 cursor.close()
