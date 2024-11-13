@@ -22,8 +22,6 @@ cursor.execute('SET search_path TO _1k')
 
 # Funciones para poblar las tablas
 
-
-
 def populateUser(num_records):
     usuarios = []
     for _ in range(num_records):
@@ -310,7 +308,7 @@ cursor.execute(
     "delete from calificacion; delete from pago; delete from viaje; delete from solicitud; delete from pasajero; delete from rutas; delete from vehiculos; delete from conductor; delete from otorgadoD;  delete from otorgadop; delete from cuponc; delete from cuponp; delete from penalizacion; delete from queja; delete from usuario;"
 )
 '''
-users = populateUser(300)
+users = populateUser(20)
 [passengers, drivers] = populatePassengerDriver(users)
 routes = populateRoutes(drivers)
 travels = populateBooking(passengers, routes)
