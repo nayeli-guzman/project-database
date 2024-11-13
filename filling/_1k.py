@@ -8,9 +8,9 @@ fake = Faker()
 
 # Conexión a la base de datos
 conn = psycopg2.connect(
-    dbname='proyecto',
+    dbname='proyecto_11',
     user='postgres',
-    password='postgress',
+    password='202120648',
     host='localhost',
     port='5432'
 )
@@ -18,7 +18,7 @@ conn.autocommit = True
 cursor = conn.cursor()
 
 # Establecer el esquema
-cursor.execute('SET search_path TO _1k')
+cursor.execute('SET search_path TO mil')
 
 # Funciones para poblar las tablas
 
@@ -65,7 +65,7 @@ def populatePassengerDriver(usuarios):
             cursor.execute("""
                 INSERT INTO Conductor (id_u, licencia, num_viajes)
                 VALUES (%s, %s, %s)
-            """, (id_u, licencia, 0))
+            """, (id_u, licencia, random.randrange(start=0, step=1, stop=50)))
             drivers.append(id_u)
     
     return passengers, drivers
@@ -181,7 +181,7 @@ def populateReview(travels):
 
 def populatePayment(travels):
     for i in range(len(travels)):
-        id_sv, id_v = travels[i]
+        id_v, id_sv = travels[i]
         
         monto = round(random.uniform(0.0, 20.0), 2)        
         metodo = random.choice(['yape', 'plin', 'efectivo'])
@@ -214,13 +214,14 @@ def populateCouponsPassenger(passengers) :
     for i in range (passengers):
         idCp = fake.unique.bothify("CP########") 
         descuento = random.randint(5, 50)
-        fecha_caducidad = fake.date_between(today=datetime.today(), end_date="+1m")
+        fecha_caducidad = fake.date_between(start_date=datetime.today(), end_date="+30d")
     
         cursor.execute("""
             INSERT INTO CuponP (idCp, descuento, fechaCaducidad)
             VALUES (%s, %s, %s)
         """, (idCp, descuento, fecha_caducidad))
         cp.append(idCp)
+    conn.commit()
     return cp
 
 def populateCouponsDriver(drivers) :
@@ -228,7 +229,7 @@ def populateCouponsDriver(drivers) :
     for i in range (drivers):
         idCp = fake.unique.bothify("CC########") 
         descuento = random.randint(5, 50)
-        fecha_caducidad = fake.date_between(today=datetime.today(), end_date="+1m")
+        fecha_caducidad = fake.date_between(start_date=datetime.today(), end_date="+30d")
         descripcion = fake.sentence(nb_words=6)[:50]  
         
         cursor.execute("""
@@ -236,6 +237,7 @@ def populateCouponsDriver(drivers) :
             VALUES (%s, %s, %s, %s)
         """, (idCp, descuento, fecha_caducidad, descripcion))
         cd.append(idCp)
+    conn.commit();
     return cd
 
 def populatePenalizacion(users):
@@ -254,41 +256,39 @@ def populatePenalizacion(users):
 
 def populateOtorgadoP(coupons, users):
     for i in range(len(coupons)):
-        if (not random.choice([True, False])):
-            return;
-
-        id_u =  random.choice(users)
-        idCp = coupons[i]
-        
-        estado = random.choice(['usado', 'no usado'])
-        
-        fecha_uso = None
-        if estado == 'usado':
-            fecha_uso = fake.date_this_year(before_today=True, after_today=False) + ' ' + fake.time()  
-        
-        cursor.execute("""
-            INSERT INTO otorgadoP (id_u, idCp, estado, fecha_uso)
-            VALUES (%s, %s, %s, %s)
-        """, (id_u, idCp, estado, fecha_uso))
+        if (random.choice([True, False])):
+            id_u =  random.choice(users)
+            idCp = coupons[i]
+            
+            estado = random.choice(['usado', 'no usado'])
+            
+            fecha_uso = None
+            if estado == 'usado':
+                fecha_uso = str(fake.date_this_year(before_today=True, after_today=False)) + ' ' + str(fake.time()) 
+            
+            cursor.execute("""
+                INSERT INTO otorgadoP (id_u, idCp, estado, fecha_uso)
+                VALUES (%s, %s, %s, %s)
+            """, (id_u, idCp, estado, fecha_uso))
+    conn.commit();
     
 def populateOtorgadoD(coupons, users):
     for i in range(len(coupons)):
-        if (not random.choice([True, False])):
-            return;
-
-        id_u =  random.choice(users)
-        idCp = coupons[i]
-        
-        estado = random.choice(['usado', 'no usado'])
-        
-        fecha_uso = None
-        if estado == 'usado':
-            fecha_uso = fake.date_this_year(before_today=True, after_today=False) + ' ' + fake.time()  
-        
-        cursor.execute("""
-            INSERT INTO otorgadoP (id_u, idCp, estado, fecha_uso)
-            VALUES (%s, %s, %s, %s)
-        """, (id_u, idCp, estado, fecha_uso))
+        if (random.choice([True, False])):            
+            id_u =  random.choice(users)
+            idCp = coupons[i]
+            
+            estado = random.choice(['usado', 'no usado'])
+            
+            fecha_uso = None
+            if estado == 'usado':
+                fecha_uso = str(fake.date_this_year(before_today=True, after_today=False)) + ' ' + str(fake.time())  
+            
+            cursor.execute("""
+                INSERT INTO otorgadoC (id_u, idCp, estado, fecha_uso)
+                VALUES (%s, %s, %s, %s)
+            """, (id_u, idCp, estado, fecha_uso))
+    conn.commit();
 
 def populateQueja(passengers, drivers):
     max = len(passengers) + len(drivers)
@@ -306,7 +306,11 @@ def populateQueja(passengers, drivers):
         """, (id_uDte, id_uDdo, motivo, fecha))
     
     
-users = populateUser(10)
+cursor.execute(
+    "delete from calificacion; delete from pago; delete from viaje; delete from solicitud; delete from pasajero; delete from rutas; delete from vehiculos; delete from conductor; delete from otorgadoc;  delete from otorgadop; delete from cuponc; delete from cuponp; delete from penalizacion; delete from queja; delete from usuario;"
+)
+
+users = populateUser(300)
 [passengers, drivers] = populatePassengerDriver(users)
 routes = populateRoutes(drivers)
 travels = populateBooking(passengers, routes)
@@ -317,7 +321,7 @@ couponsP = populateCouponsPassenger(len(passengers))
 couponsD = populateCouponsDriver(len(drivers))
 populatePenalizacion(users)
 populateOtorgadoP(couponsP,passengers)
-populateOtorgadoD(couponsD,passengers)
+populateOtorgadoD(couponsD,drivers)
 populateQueja(passengers,drivers)
 
 # Cerrar la conexión
