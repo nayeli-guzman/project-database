@@ -8,9 +8,9 @@ fake = Faker()
 
 # Conexión a la base de datos
 conn = psycopg2.connect(
-    dbname='proyecto_11',
+    dbname='proyecto',
     user='postgres',
-    password='202120648',
+    password='postgress',
     host='localhost',
     port='5432'
 )
@@ -18,7 +18,7 @@ conn.autocommit = True
 cursor = conn.cursor()
 
 # Establecer el esquema
-cursor.execute('SET search_path TO mil')
+cursor.execute('SET search_path TO _1k')
 
 # Funciones para poblar las tablas
 
@@ -285,7 +285,7 @@ def populateOtorgadoD(coupons, users):
                 fecha_uso = str(fake.date_this_year(before_today=True, after_today=False)) + ' ' + str(fake.time())  
             
             cursor.execute("""
-                INSERT INTO otorgadoC (id_u, idCp, estado, fecha_uso)
+                INSERT INTO otorgadoD (id_u, idCp, estado, fecha_uso)
                 VALUES (%s, %s, %s, %s)
             """, (id_u, idCp, estado, fecha_uso))
     conn.commit();
@@ -305,11 +305,11 @@ def populateQueja(passengers, drivers):
             VALUES (%s, %s, %s, %s)
         """, (id_uDte, id_uDdo, motivo, fecha))
     
-    
+'''  
 cursor.execute(
-    "delete from calificacion; delete from pago; delete from viaje; delete from solicitud; delete from pasajero; delete from rutas; delete from vehiculos; delete from conductor; delete from otorgadoc;  delete from otorgadop; delete from cuponc; delete from cuponp; delete from penalizacion; delete from queja; delete from usuario;"
+    "delete from calificacion; delete from pago; delete from viaje; delete from solicitud; delete from pasajero; delete from rutas; delete from vehiculos; delete from conductor; delete from otorgadoD;  delete from otorgadop; delete from cuponc; delete from cuponp; delete from penalizacion; delete from queja; delete from usuario;"
 )
-
+'''
 users = populateUser(300)
 [passengers, drivers] = populatePassengerDriver(users)
 routes = populateRoutes(drivers)
