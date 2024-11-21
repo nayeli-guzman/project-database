@@ -1,6 +1,6 @@
-DROP SCHEMA _1k CASCADE;
-CREATE SCHEMA _1k;
-set search_path to _1k;
+DROP SCHEMA _100k CASCADE;
+CREATE SCHEMA _100k;
+set search_path to _100k;
 
 create table Usuario (
 	id_u varchar(9) primary key,
@@ -10,7 +10,8 @@ create table Usuario (
 	celular varchar(9) not null,
 	email varchar(50) not null,
 	fecha_naci date not null,
-	calificacion double precision not null,
+	puntaje_acumulado int not null,
+	cant_calificaciones int not null,
 	contrasenia varchar(50),
 	check(genero in ('M', 'F'))
 );
