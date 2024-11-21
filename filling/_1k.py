@@ -15,7 +15,7 @@ conn = psycopg2.connect(
     port='5432'
 )
 
-amount = 100
+amount = 100000
 
 conn.autocommit = True
 cursor = conn.cursor()
@@ -150,7 +150,6 @@ def populateTravel(id_sv, tiempo_atencion, Pid_u):
     return (Pid_u, id_v, id_sv, fecha)
 
 def populateReview(travels):
-
     c=0
 
     for i in range(len(travels)):

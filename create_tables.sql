@@ -10,8 +10,8 @@ create table Usuario (
 	celular varchar(9) not null,
 	email varchar(50) not null,
 	fecha_naci date not null,
-	puntaje_acumulado int not null,
-	cant_calificaciones int not null,
+	puntaje_acumulado double precision not null,
+	cant_calificaciones smallint not null,
 	contrasenia varchar(50),
 	check(genero in ('M', 'F'))
 );
@@ -100,7 +100,7 @@ create table Vehiculos(
 	modelo varchar(10),
 	capacidad smallint not null,
 	SOAT varchar(5) not null,
-	imagen_path varchar(50) not null, 
+	imagen_path varchar(50) not null,
 	fecha_registro date not null,
 	estado char(1) not null default 'N',
 	foreign key (id_u) references Usuario(id_u),
@@ -181,5 +181,3 @@ CHECK (estado IN ('usado', 'no usado'));
 ALTER TABLE otorgadoD
 ADD CONSTRAINT otorgadoc_check_estado
 CHECK (estado IN ('usado', 'no usado'));
-
-
