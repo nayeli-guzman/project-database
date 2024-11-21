@@ -192,7 +192,7 @@ def populatePayment(travels):
         
         monto = round(random.uniform(0.0, 20.0), 2)        
         metodo = random.choice(['yape', 'plin', 'efectivo'])
-        id_p = fake.uuid4()[:10]  # Genera un ID único truncado a 10 caracteres
+        id_p = fake.unique.bothify(text='P?????????')
         
         cursor.execute("""
             INSERT INTO Pago (id_p, id_v, id_sv, monto, metodo)
@@ -307,7 +307,7 @@ def populateOtorgadoP(coupons, passengers, travels):
                         VALUES (%s, %s, %s, %s)
                     """, (passenger, idCp, estado, fecha_uso))
                     count += 1
-                    if (count == amount):
+                    if (count >= amount):
                         break
 
     conn.commit()
