@@ -15,7 +15,7 @@ conn = psycopg2.connect(
     port='5432'
 )
 
-amount = 1 * (10**3)
+amount = 10 * (10**3)
 
 conn.autocommit = True
 cursor = conn.cursor()

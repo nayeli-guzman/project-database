@@ -181,3 +181,38 @@ CHECK (estado IN ('usado', 'no usado'));
 ALTER TABLE otorgadoD
 ADD CONSTRAINT otorgadoc_check_estado
 CHECK (estado IN ('usado', 'no usado'));
+
+create or replace function recal_calificacion()
+returns trigger as $$
+begin
+	if new.tipo = 'P' then
+		update Usuario
+		set 
+puntaje_acumulado = puntaje_acumulado + new.puntuacion,
+cant_calificaciones = cant_calificaciones + 1
+		where id_u = (
+select Cid_u 
+from Solicitud
+where id_sv = new.id_sv
+);
+	elsif new.tipo = 'D' then
+		update Usuario
+		set 
+puntaje_acumulado = puntaje_acumulado + new.puntuacion,
+cant_calificaciones = cant_calificaciones + 1
+			where id_u =  (
+select Pid_u 
+from Solicitud
+where id_sv = new.id_sv
+);
+	end if;
+return new;
+end;
+$$ language plpgsql;
+
+
+create or replace trigger trg_recal_calificacion
+after insert on calificacion
+for each row
+execute function recal_calificacion();
+
