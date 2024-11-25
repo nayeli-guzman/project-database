@@ -216,3 +216,201 @@ after insert on calificacion
 for each row
 execute function recal_calificacion();
 
+
+-- Pasajero y Usuario
+create function ver_si_es_usuario()
+returns trigger as $$
+begin
+	if not exists (
+    select 1
+    from Usuario
+    where id_u = new.id_u
+) then
+	raise exception ‘El usuario no existe’;
+	end if;
+	return new;
+end;
+&& language plpgsql;
+
+create trigger trg_verificar_pasajero_en_usuario
+before insert on Pasajero
+for each row
+execute ver_si_es_usuario();
+
+-- Conductor y Usuario
+create trigger trg_verificar_conductor_en_usuario
+before insert on Conductor
+for each row
+execute ver_si_es_usuario();
+
+-- Ruta y Conductor
+create function verif_conductor_de_ruta()
+returns trigger as $$
+begin
+	if not exists (
+    select 1
+    from Conductor
+    where id_u = new.id_u
+) then
+	    raise exception ‘El usuario no existe’;
+	end if;
+	return new;
+end;
+&& language plpgsql;
+
+create trigger trg_verificar_conductor_de_ruta
+before insert on Ruta
+for each row
+execute verif_conductor_de_ruta();
+
+-- Viaje y Solicitud
+
+create function verif_solicitud_de_viaje()
+returns trigger as $$
+begin
+	if not exists (
+    select 1
+    from Solicitud
+    where id_sv = new.id_sv
+) then
+	     raise exception ‘El usuario no existe’;
+	end if;
+	return new;
+end;
+&& language plpgsql;
+
+create trigger trg_verificar_solicitud_de_viaje
+before insert on Viaje
+for each row
+execute verif_solicitud_de_viaje();
+
+-- Calificación y Viaje
+create function verif_viaje_de_calificacion()
+returns trigger as $$
+begin
+	if exists (
+    select 1
+    from Viaje
+    where id_v = new.id_v
+) then
+	    return new;
+	end if;
+end;
+&& language plpgsql;
+
+create trigger trg_verificar_viaje_de_calificacion
+before insert on Calificacion 
+for each row
+execute verif_viaje_de_calificacion();
+
+--- Cuando un conductor activa una ruta teniendo otra activada la anterior se desactiva.
+
+create function change_state()
+return trigger as $$
+begin
+	if new.estado = ‘A’ then
+update Ruta 
+set estado = ‘D’ 
+where id_u = new.id_u 
+and estado = ‘A’
+end if;
+return new;
+end;
+$$ language plpgsql
+
+	create or replace trigger trigger_change_state
+before update or insert on Rutas
+for each row
+when (new.estado = 'A')
+execute function change_state();
+
+
+
+--- Verificar cuando un usuario hace uso de un cupón que este no haya vencido.
+
+create function verificar_cuponP()
+returns trigger as $$
+begin
+	if new.estado = ‘U’ then
+		if exists (select 1
+	   	   from CuponP C
+		   where C.idCp = new.idCp
+	   and C.fechaCaducidad > current_date
+) then
+    return new;
+end if;
+	end if;
+end;
+$$ language plpgsql;
+
+create trigger trg_verif_cuponP
+before update of estado on otorgadoP
+for each row 
+when (old.estado != new.estado)
+execute function verificar_cuponP();
+
+
+create function verificar_cuponC()
+returns trigger as $$
+begin
+	if new.estado = ‘U’ then
+		if exists (select 1
+	   	   from CuponC C
+		   where C.idCp = new.idCp
+	   and C.fechaCaducidad > current_date
+) then
+    return new;
+end if;
+	end if;
+end;
+$$ language plpgsql;
+create trigger trg_verif_cuponC
+before update of estado on otorgadoC
+for each row 
+when (old.estado != new.estado)
+execute function verificar_cuponC();
+--- cuando se realice una solicitud, se debe disminuir la cantidad de asientos de la ruta
+
+create or replace function verifyBooking()
+return trigger as $$
+begin
+if exists (
+	select 1 
+	from Ruta 
+	where id_r= new.id_r
+	and capacidad>0
+) then 
+update ruta
+set capacidad = capacidad-1
+where id_r=new.id_r;
+else
+raise exception ‘No hay asientos disponibles’;
+endif;
+return new;
+end;
+$$ language plpgsql;
+
+create or replace trigger tgrVerifyBooking()
+before insert on Solicitud
+for each row 
+execute function verifyBooking();
+
+--- modificar atributo num_viajes de conductor cuando viaje cambie estado a realizada’
+
+create or replace function updateNumViajesDriver()
+returns trigger as $$
+begin
+	if new.estado = ‘realizada’ then 
+		update conductor as c
+		set num_viajes = num_viajes + 1
+		where c.id_u = new.id_u;
+	end if;
+	return new;
+end;
+$$ language plpgsql;
+
+
+create or replace trigger trg_updateNumViajesDriver
+after insert or update on viaje
+execute function updateNumViajesDriver();
+
